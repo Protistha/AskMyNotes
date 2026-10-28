@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskMyNotes - Q&A over Docs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>AskMyNotes</h1>
+        <p>Ask questions over your own PDFs.</p>
+    </header>
+
+    <main>
+        <!-- Login Section -->
+        <section id="auth-section" class="card">
+            <h2>Login / Register</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <div class="btn-group">
+                <button onclick="login()">Login</button>
+                <button onclick="register()" class="secondary">Register</button>
+            </div>
+            <p id="auth-msg"></p>
+        </section>
+
+        <!-- App Section (Hidden until login) -->
+        <section id="app-section" class="hidden">
+            <div class="card">
+                <h2>1. Upload Document</h2>
+                <input type="file" id="pdf-file" accept=".pdf">
+                <button onclick="uploadFile()">Upload & Process</button>
+                <p id="upload-msg"></p>
+            </div>
+
+            <div class="card">
+                <h2>2. Ask a Question</h2>
+                <input type="text" id="question-input" placeholder="What is the main topic?">
+                <button onclick="askQuestion()">Ask</button>
+                <div id="answer-box" class="hidden">
+                    <h3>Answer:</h3>
+                    <p id="answer-text"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
