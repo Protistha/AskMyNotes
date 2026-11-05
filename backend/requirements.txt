@@ -6,3 +6,4 @@ PyPDF2
 openai
 PyJWT
 bcrypt
+gunicorn
