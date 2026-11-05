@@ -13,7 +13,7 @@ from db import execute_query
 load_dotenv()
 
 app = Flask(__name__)
-# FIX: Restrict CORS (change "*" to your Vercel URL later)
+# FIX: Restrict CORS (Change "*" to your Vercel URL before final deployment)
 CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
@@ -31,12 +31,13 @@ def generate_token(user_id, role_id):
     payload = {
         'user_id': user_id,
         'role_id': role_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        # FIX: Updated to avoid deprecation warning
+        'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm="HS256")
 
 def get_current_user():
-    """FIX: Enforce auth on protected routes using JWT"""
+    """FIX: Enforce auth using JWT"""
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
@@ -108,11 +109,10 @@ def upload_document():
         pdf_reader = PyPDF2.PdfReader(BytesIO(file.read()))
         chunks = []
         
-        # FIX: Preserve actual page numbers and chunk by sentences/paragraphs
+        # FIX: Preserve actual page numbers and chunk by sentences
         for page_num, page in enumerate(pdf_reader.pages):
             text = page.extract_text()
             if text:
-                # Split by sentences to avoid mid-sentence cuts
                 sentences = text.replace('\n', ' ').split('. ')
                 current_chunk = ""
                 for sentence in sentences:
@@ -190,7 +190,8 @@ def ask_question():
 
         prompt = f"Answer the question using ONLY this context:\n{context}\n\nQuestion: {question}"
         ai_response = client.chat.completions.create(
-            model="@cf/meta/llama-3-8b-instruct",
+            # FIX: Updated model ID to the active Llama 3.1
+            model="@cf/meta/llama-3.1-8b-instruct",
             messages=[{"role": "user", "content": prompt}]
         )
         answer_text = ai_response.choices[0].message.content
