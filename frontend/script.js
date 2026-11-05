@@ -1,5 +1,5 @@
 
-const API_BASE = "https://askmynotes-a5rv.onrender.com";
+const API_BASE = "https://askmynotes-a5rv.onrender.com/api";
 let authToken = null;
 
 // --- AUTH FUNCTIONS ---
