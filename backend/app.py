@@ -13,7 +13,7 @@ from db import execute_query
 load_dotenv()
 
 app = Flask(__name__)
-# FIX: Restrict CORS (Change "*" to your Vercel URL before final deployment)
+# Restrict CORS (Change "*" to your Vercel URL before final deployment)
 CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
@@ -31,13 +31,13 @@ def generate_token(user_id, role_id):
     payload = {
         'user_id': user_id,
         'role_id': role_id,
-        # FIX: Updated to avoid deprecation warning
+        # Fixed deprecation warning
         'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm="HS256")
 
 def get_current_user():
-    """FIX: Enforce auth using JWT"""
+    """Enforce auth using JWT"""
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
@@ -61,7 +61,6 @@ def register():
     if not data or 'email' not in data or 'password' not in data:
         return jsonify({"error": "Missing fields"}), 400
     
-    # FIX: Use bcrypt instead of SHA-256
     hashed = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     try:
@@ -93,7 +92,6 @@ def login():
 
 @app.route('/api/upload', methods=['POST'])
 def upload_document():
-    # FIX: Enforce Auth
     current_user = get_current_user()
     if not current_user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -109,7 +107,6 @@ def upload_document():
         pdf_reader = PyPDF2.PdfReader(BytesIO(file.read()))
         chunks = []
         
-        # FIX: Preserve actual page numbers and chunk by sentences
         for page_num, page in enumerate(pdf_reader.pages):
             text = page.extract_text()
             if text:
@@ -124,7 +121,6 @@ def upload_document():
                 if current_chunk:
                     chunks.append({"text": current_chunk.strip(), "page": page_num + 1})
 
-        # FIX: db.py now commits this successfully
         doc = execute_query(
             "INSERT INTO documents (user_id, filename, file_url) VALUES (%s, %s, %s) RETURNING doc_id",
             (current_user['user_id'], file.filename, "dummy_url"), fetch=True
@@ -150,7 +146,6 @@ def upload_document():
 
 @app.route('/api/ask', methods=['POST'])
 def ask_question():
-    # FIX: Enforce Auth
     current_user = get_current_user()
     if not current_user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -169,7 +164,6 @@ def ask_question():
         emb_response = client.embeddings.create(model="@cf/baai/bge-base-en-v1.5", input=question)
         q_embedding = emb_response.data[0].embedding
 
-        # FIX: Cast to ::vector and scope to current_user's documents only
         relevant_chunks = execute_query(
             """
             SELECT c.chunk_id, c.content, c.page_number, d.filename 
@@ -190,8 +184,8 @@ def ask_question():
 
         prompt = f"Answer the question using ONLY this context:\n{context}\n\nQuestion: {question}"
         ai_response = client.chat.completions.create(
-            # FIX: Updated model ID to the active Llama 3.1
-            model="@cf/meta/llama-3.1-8b-instruct",
+            # Latest active and cost-effective model
+            model="@cf/meta/llama-3.1-8b-instruct-fp8-fast",
             messages=[{"role": "user", "content": prompt}]
         )
         answer_text = ai_response.choices[0].message.content
@@ -199,7 +193,6 @@ def ask_question():
         execute_query("CALL log_qa_transaction(%s, %s, %s, %s)", (user_id, question, answer_text, chunk_ids))
         log_action(user_id, "QUERY", question[:20])
 
-        # FIX: Send back the actual citation text for frontend display
         citations = [{"file": c['filename'], "page": c['page_number']} for c in relevant_chunks]
         return jsonify({"answer": answer_text, "citations": citations}), 200
         
@@ -208,5 +201,4 @@ def ask_question():
         return jsonify({"error": "Failed to generate answer"}), 500
 
 if __name__ == '__main__':
-    # FIX: debug=False for production readiness
     app.run(debug=False, port=5000)
