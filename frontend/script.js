@@ -1,8 +1,9 @@
-// NOTE: Change this to your deployed backend URL if not running locally
-const API_BASE = "http://localhost:5000/api";
-let currentUserId = null;
+// Make sure this matches your backend URL (update for Render deployment later)
+const API_BASE = "http://127.0.0.1:5000/api";
+let authToken = null;
 
-// 1. Auth Functions
+// --- AUTH FUNCTIONS ---
+
 async function register() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -13,7 +14,13 @@ async function register() {
         body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-    document.getElementById('auth-msg').innerText = data.message || data.error;
+    
+    if (res.ok) {
+        authToken = data.token;
+        showApp();
+    } else {
+        document.getElementById('auth-msg').innerText = data.error;
+    }
 }
 
 async function login() {
@@ -28,52 +35,78 @@ async function login() {
     const data = await res.json();
     
     if (res.ok) {
-        currentUserId = data.user_id;
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('app-section').classList.remove('hidden');
+        authToken = data.token;
+        showApp();
     } else {
         document.getElementById('auth-msg').innerText = data.error;
     }
 }
 
-// 2. Upload Function
+function showApp() {
+    document.getElementById('auth-section').classList.add('hidden');
+    document.getElementById('app-section').classList.remove('hidden');
+    document.getElementById('auth-msg').innerText = "";
+}
+
+// --- APP FUNCTIONS ---
+
 async function uploadFile() {
     const fileInput = document.getElementById('pdf-file');
-    if (!fileInput.files[0]) return alert("Select a PDF first.");
+    if (!fileInput.files[0]) return alert("Please select a PDF file first.");
 
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
-    formData.append('user_id', currentUserId);
 
-    document.getElementById('upload-msg').innerText = "Processing (embedding)... please wait.";
+    document.getElementById('upload-msg').innerText = "Processing... please wait.";
     
     const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
+        headers: { 
+            // FIX: Send JWT token to prove authentication
+            'Authorization': `Bearer ${authToken}` 
+        },
         body: formData
     });
     const data = await res.json();
     document.getElementById('upload-msg').innerText = data.message || data.error;
 }
 
-// 3. Ask Function
 async function askQuestion() {
     const question = document.getElementById('question-input').value;
+    if (!question) return;
+
     const answerBox = document.getElementById('answer-box');
     const answerText = document.getElementById('answer-text');
+    const citationText = document.getElementById('citation-text');
 
     answerText.innerText = "Thinking...";
+    citationText.innerText = "";
     answerBox.classList.remove('hidden');
 
-    const res = await fetch(`${API_BASE}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, user_id: currentUserId })
-    });
-    const data = await res.json();
-    
-    if (res.ok) {
-        answerText.innerText = data.answer;
-    } else {
-        answerText.innerText = data.error;
+    try {
+        const res = await fetch(`${API_BASE}/ask`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                // FIX: Send JWT token
+                'Authorization': `Bearer ${authToken}` 
+            },
+            body: JSON.stringify({ question })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            answerText.innerText = data.answer;
+            // FIX: Display the citations
+            if (data.citations && data.citations.length > 0) {
+                const cites = data.citations.map(c => `${c.file} (Page ${c.page})`).join(', ');
+                citationText.innerText = `Sources: ${cites}`;
+            }
+        } else {
+            answerText.innerText = "Error: " + (data.error || "Something went wrong");
+        }
+    } catch (error) {
+        answerText.innerText = "Network error. Please check if the backend is running.";
     }
 }
