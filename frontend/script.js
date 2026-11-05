@@ -1,5 +1,5 @@
-// Make sure this matches your backend URL (update for Render deployment later)
-const API_BASE = "http://127.0.0.1:5000/api";
+
+const API_BASE = "https://askmynotes-a5rv.onrender.com";
 let authToken = null;
 
 // --- AUTH FUNCTIONS ---
