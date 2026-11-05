@@ -6,9 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_db_connection():
-    """Establishes and returns a connection to the PostgreSQL database."""
-    conn = psycopg2.connect(os.getenv("DATABASE_URL"), cursor_factory=RealDictCursor)
-    return conn
+    return psycopg2.connect(os.getenv("DATABASE_URL"), cursor_factory=RealDictCursor)
 
 def execute_query(query, params=None, fetch=False):
     """Helper function to execute queries safely."""
@@ -16,10 +14,11 @@ def execute_query(query, params=None, fetch=False):
     cur = conn.cursor()
     try:
         cur.execute(query, params)
-        if fetch:
-            result = cur.fetchall()
-            return result
-        conn.commit()
+        result = cur.fetchall() if fetch else None
+        
+        # FIX: Commit regardless of fetch=True or False
+        conn.commit() 
+        return result
     except Exception as e:
         conn.rollback()
         raise e
