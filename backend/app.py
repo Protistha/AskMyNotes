@@ -14,7 +14,7 @@ load_dotenv()
 
 app = Flask(__name__)
 # Restrict CORS (Change "*" to your Vercel URL before final deployment)
-CORS(app, resources={r"/api/*": {"origins": "*"}}) 
+CORS(app, resources={r"/api/*": {"origins": "https://askmynotes-frontend.vercel.app"}}) 
 
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
 
