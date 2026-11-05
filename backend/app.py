@@ -1,6 +1,6 @@
 import os
 import bcrypt
-import PyJWT as jwt
+import jwt
 import datetime
 import PyPDF2
 from io import BytesIO
