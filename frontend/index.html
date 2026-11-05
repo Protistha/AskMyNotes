@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AskMyNotes - Q&A over Docs</title>
+    <title>AskMyNotes</title>
+    <!-- Academic Tech Theme: Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +15,7 @@
     </header>
 
     <main>
-        <!-- Login Section -->
+        <!-- Login / Register Section -->
         <section id="auth-section" class="card">
             <h2>Login / Register</h2>
             <input type="email" id="email" placeholder="Email">
@@ -22,25 +24,29 @@
                 <button onclick="login()">Login</button>
                 <button onclick="register()" class="secondary">Register</button>
             </div>
-            <p id="auth-msg"></p>
+            <p id="auth-msg" class="error-text"></p>
         </section>
 
-        <!-- App Section (Hidden until login) -->
+        <!-- Main App Section (Hidden until login) -->
         <section id="app-section" class="hidden">
             <div class="card">
                 <h2>1. Upload Document</h2>
                 <input type="file" id="pdf-file" accept=".pdf">
                 <button onclick="uploadFile()">Upload & Process</button>
-                <p id="upload-msg"></p>
+                <p id="upload-msg" class="status-text"></p>
             </div>
 
             <div class="card">
                 <h2>2. Ask a Question</h2>
-                <input type="text" id="question-input" placeholder="What is the main topic?">
-                <button onclick="askQuestion()">Ask</button>
+                <input type="text" id="question-input" placeholder="Ask something about your PDF...">
+                <button onclick="askQuestion()">Ask AI</button>
+                
+                <!-- Answer Box -->
                 <div id="answer-box" class="hidden">
                     <h3>Answer:</h3>
                     <p id="answer-text"></p>
+                    <!-- New Citation Display -->
+                    <p id="citation-text" class="citation-style"></p>
                 </div>
             </div>
         </section>
